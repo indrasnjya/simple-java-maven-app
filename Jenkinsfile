@@ -2,13 +2,13 @@ pipeline {
     agent {
         docker {
             image 'maven:3.9.2'
-            args '-v /root/.m2:/root/.m2'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
     stages {
         stage('Build') {
             steps {
-                sh '/opt/maven/bin/mvn -B -DskipTests clean package'
+                sh 'mvn clean install'
 '
             }
         }
