@@ -28,7 +28,7 @@ pipeline {
             steps {
                 echo '=== Building simple-java-maven-app Docker Image ==='
                 script {
-                    app = docker.build("indrasnjya/simple-java-maven-app")
+                    def app = docker.build("indrasnjya/simple-java-maven-app")
                 }
             }
         }
@@ -39,8 +39,8 @@ pipeline {
             steps {
                 echo '=== Pushing simple-java-maven-app Docker Image ==='
                 script {
-                    GIT_COMMIT_HASH = sh(script: "git log -n 1 --pretty=format:'%H'", returnStdout: true).trim()
-                    SHORT_COMMIT = GIT_COMMIT_HASH[0..7]
+                    def GIT_COMMIT_HASH = sh(script: "git log -n 1 --pretty=format:'%H'", returnStdout: true).trim()
+                    def SHORT_COMMIT = GIT_COMMIT_HASH[0..7]
                     docker.withRegistry('https://registry.hub.docker.com', 'dockerHubCredentials') {
                         app.push(SHORT_COMMIT)
                         app.push('latest')
@@ -74,7 +74,7 @@ pipeline {
             }
         }
         stage('Deploy') {
-            steps {            
+            steps {
                 sh './script/deploy.sh'
                 script {
                     def deployInput = input(
