@@ -5,6 +5,10 @@ pipeline {
             args '-v /root/.m2:/root/.m2'
         }
     }
+    environment {
+        APP_IMAGE = 'indrasnjya/simple-java-maven-app'
+        SHORT_COMMIT = ''
+    }
     stages {
         stage('Build') {
             steps {
@@ -22,41 +26,40 @@ pipeline {
             }
         }
         stage('Build Docker Image') {
-    when {
-        branch 'master'
-    }
-    steps {
-        echo '=== Building simple-java-maven-app Docker Image ==='
-        script {
-            def app = docker.build("indrasnjya/simple-java-maven-app")
-            env.APP_IMAGE = "indrasnjya/simple-java-maven-app" // Menyimpan nama image dalam environment variable
-        }
-    }
-}
-stage('Push Docker Image') {
-    when {
-        branch 'master'
-    }
-    steps {
-        echo '=== Pushing simple-java-maven-app Docker Image ==='
-        script {
-            def GIT_COMMIT_HASH = sh(script: "git log -n 1 --pretty=format:'%H'", returnStdout: true).trim()
-            def SHORT_COMMIT = GIT_COMMIT_HASH[0..7]
-            docker.withRegistry('https://registry.hub.docker.com', 'dockerHubCredentials') {
-                docker.image(env.APP_IMAGE).push(SHORT_COMMIT) // Menggunakan env.APP_IMAGE untuk mengakses nama image
-                docker.image(env.APP_IMAGE).push('latest') // Menggunakan env.APP_IMAGE untuk mengakses nama image
+            when {
+                branch 'master'
+            }
+            steps {
+                echo '=== Building simple-java-maven-app Docker Image ==='
+                script {
+                    def app = docker.build(env.APP_IMAGE)
+                }
             }
         }
-    }
-}
-stage('Remove local images') {
-    steps {
-        echo '=== Delete the local docker images ==='
-        sh 'docker rmi -f ${env.APP_IMAGE}:latest || :' // Menggunakan env.APP_IMAGE untuk mengakses nama image
-        sh "docker rmi -f ${env.APP_IMAGE}:${SHORT_COMMIT} || :" // Menggunakan env.APP_IMAGE dan SHORT_COMMIT untuk mengakses nama image
-    }
-}
-    stage('Manual Approval') {
+        stage('Push Docker Image') {
+            when {
+                branch 'master'
+            }
+            steps {
+                echo '=== Pushing simple-java-maven-app Docker Image ==='
+                script {
+                    def GIT_COMMIT_HASH = sh(script: "git log -n 1 --pretty=format:'%H'", returnStdout: true).trim()
+                    env.SHORT_COMMIT = GIT_COMMIT_HASH[0..7]
+                    docker.withRegistry('https://registry.hub.docker.com', 'dockerHubCredentials') {
+                        docker.image(env.APP_IMAGE).push(env.SHORT_COMMIT)
+                        docker.image(env.APP_IMAGE).push('latest')
+                    }
+                }
+            }
+        }
+        stage('Remove local images') {
+            steps {
+                echo '=== Delete the local docker images ==='
+                sh "docker rmi -f ${APP_IMAGE}:latest || :"
+                sh "docker rmi -f ${APP_IMAGE}:${SHORT_COMMIT} || :"
+            }
+        }
+        stage('Manual Approval') {
             steps {
                 script {
                     def userInput = input(
