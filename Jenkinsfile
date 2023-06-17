@@ -72,7 +72,7 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                sh './script/deploy.sh'
+                sh './scripts/deploy.sh'
                 script {
                     def deployInput = input(
                         id: 'deployInput',
