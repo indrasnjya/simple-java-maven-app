@@ -51,14 +51,7 @@ pipeline {
                     }
                 }
             }
-        }
-        stage('Remove local images') {
-            steps {
-                echo '=== Delete the local docker images ==='
-                sh "docker rmi -f ${APP_IMAGE}:latest || :"
-                sh "docker rmi -f ${APP_IMAGE}:${SHORT_COMMIT} || :"
-            }
-        }
+        }        
         stage('Manual Approval') {
             steps {
                 script {
